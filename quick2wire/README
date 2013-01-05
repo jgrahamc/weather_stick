@@ -1,0 +1,4 @@
+This is a heavily cut down version of the Quick2Wire library to just
+isolate the parts needed for /dev-based SPI access.
+
+Go to http://quick2wire.com/ for details of the library.
