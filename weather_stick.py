@@ -5,7 +5,7 @@
 # Copyright (c) 2013 John Graham-Cumming
 
 from bs4 import BeautifulSoup
-import urllib2
+from urllib.request import urlopen
 import sys
 
 sys.path.append("./quick2wire")
@@ -17,7 +17,7 @@ from quick2wire.spi import *
 location_code = '2643743';
 weather_base = 'http://www.bbc.co.uk/weather/%s'
 
-soup = BeautifulSoup(urllib2.urlopen(weather_base % location_code))
+soup = BeautifulSoup(urlopen(weather_base % location_code))
 
 # Finds the table that contains the hours and returns the list of the
 # available hours. The table looks something like:
@@ -84,21 +84,24 @@ for h, c in zip(hours, conditions):
 
 show = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
-# Pixel color on the wire is Green Red Blue with 8 bits per pixel
-# and green the top 8 bits of a 24 bit number. 
+# For details of the SPI-based wire protocol for the LED strip read
+# https://github.com/adafruit/LPD8806/blob/master/LPD8806.cpp
+
+# Pixel color on the wire is Green Red Blue with 7 bits per pixel and
+# green the top 8 bits of a 24 bit number. Each byte has bit 7 set.
 def grb(r, g, b):
-    return [g, r, b]
+    return [g | 0x80, r | 0x80, b | 0x80]
 
 # Translate the output of simplify into a color value to be 
 # used on the LED strip
 def to_color(s):
     return {
-        'sunny':      grb(255, 255, 0),   # Yellow
-        'cloud':      grb(220, 220, 22),  # Greyish
-        'light rain': grb(0, 255, 255),   # Cyan
-        'heavy rain': grb(0, 0, 255),     # Dark blue
-        'snow':       grb(255, 255, 255), # White
-        'unknown':    grb(255, 0, 0)      # Red
+        'sunny':      grb(127, 127, 0),   # Yellow
+        'cloud':      grb(22, 22, 22),  # Greyish
+        'light rain': grb(0, 127, 127),   # Cyan
+        'heavy rain': grb(0, 0, 127),     # Dark blue
+        'snow':       grb(127, 127, 127), # White
+        'unknown':    grb(127, 0, 0)      # Red
         }[s]
 
 colors = []
@@ -109,11 +112,14 @@ for h in show:
     else:
         colors.extend(grb(0, 0, 0))
 
-print colors
+# The final 0 latches the final blue byte
+
+colors.append(0)
 
 strip = SPIDevice(0, 0)
 strip.speed_hz = 2000000
-strip.close_mode = SPI_MODE_0
-strip.transaction(writing_bytes(colors))
+strip.clock_mode = SPI_MODE_0
+strip.transaction(writing([0]))
+strip.transaction(writing(colors))
 strip.close()
 
