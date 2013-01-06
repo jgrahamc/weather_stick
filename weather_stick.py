@@ -97,8 +97,8 @@ def grb(r, g, b):
 def to_color(s):
     return {
         'sunny':      grb(127, 127, 0),   # Yellow
-        'cloud':      grb(22, 22, 22),  # Greyish
-        'light rain': grb(0, 127, 127),   # Cyan
+        'cloud':      grb(50, 100, 10),   # Greenish
+        'light rain': grb(0, 100, 100),   # Cyan
         'heavy rain': grb(0, 0, 127),     # Dark blue
         'snow':       grb(127, 127, 127), # White
         'unknown':    grb(127, 0, 0)      # Red
